@@ -6,51 +6,13 @@ import { Scene } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import * as dat from "lil-gui";
-
-const gui = new dat.GUI();
-const scene = new Scene();
+import { Ship } from "./ship";
 
 let camera, renderer;
 let controls, water, sun;
 
-const loader = new GLTFLoader();
-
-//!Ship Class
-class Ship {
-  constructor() {
-    loader.load("assets/ship/scene.gltf", (gltf) => {
-      scene.add(gltf.scene);
-      gltf.scene.scale.set(100, 100, 100);
-      gltf.scene.position.set(5, 30, 0);
-      gltf.scene.rotation.y = 1.5;
-
-      this.boat = gltf.scene;
-      this.speed = {
-        vel: 0,
-        rot: 0,
-      };
-    });
-  }
-
-  stop() {
-    this.speed.vel = 0;
-    this.speed.rot = 0;
-  }
-
-  update() {
-    if (this.boat) {
-      this.boat.rotation.y += this.speed.rot;
-      this.boat.translateX(this.speed.vel);
-
-      const time = performance.now() * 0.001;
-      this.boat.position.y = Math.sin(time) * 2;
-    }
-  }
-}
-
-const ship = new Ship();
+const scene = new Scene();
+const ship = new Ship(scene);
 
 init();
 animate();
@@ -170,6 +132,7 @@ function animate() {
   requestAnimationFrame(animate);
   render();
   ship.update();
+  //ship.update();
 }
 
 function render() {
