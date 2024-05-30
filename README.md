@@ -1,4 +1,4 @@
-To Get Started , Run in Terminal : 
-npm install
-npm install three
-npm i -save lil-gui
+To Get Started , Run in Terminal :__
+npm install__
+npm install three__
+npm i -save lil-gui__
