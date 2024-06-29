@@ -12,16 +12,17 @@ class ThurstForce extends Force {
       Math.cos(angleY),
       0,
       -Math.sin(angleY)
+      
     );
   };
 
-  calculate(RPM, diameter, area, density, angleY) {
+  calculate(RPM, diameter, areaa, density, angleY) {
     const p = density;
-    const area = area;
+    const area = areaa;
     const rpm = RPM;
     const d = diameter;
 
-    this.direction = this.compute_direction(angleY, angleZ);
+    this.direction = this.compute_direction(angleY);
 
     const strength = 0.3 * p * area * rpm * (d * d) ;
 

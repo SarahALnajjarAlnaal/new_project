@@ -1,18 +1,20 @@
 import "./style.css";
-
 import * as THREE from "three";
+import * as dat from 'dat.gui';
 import { Scene } from "three";
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { Ship } from "./ship";
+import PhysicsWorld from "./physics/PhysicsWorld";
 
 let camera, renderer;
 let controls, water, sun;
 
 const scene = new Scene();
 const ship = new Ship(scene);
+
+const physicsWorld = new PhysicsWorld(ship, {}); // تهيئة PhysicsWorld مع السفينة
 
 init();
 animate();
@@ -33,8 +35,6 @@ async function init() {
   camera.position.set(30, 50, 100);
 
   sun = new THREE.Vector3();
-
-  //! The water is here
 
   const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
 
@@ -105,7 +105,7 @@ async function init() {
 
   window.addEventListener("keydown", function (e) {
     if (e.key == "ArrowUp") {
-      ship.speed.vel = 1;
+      ship.speed.vel += 1;
     }
     if (e.key == "ArrowDown") {
       ship.speed.vel = -1;
@@ -114,12 +114,26 @@ async function init() {
       ship.speed.rot = -0.1;
     }
     if (e.key == "ArrowLeft") {
-      ship.speed.rot = 0.1;
+      ship.speed.rot = 0.005;
     }
   });
   window.addEventListener("keyup", function (e) {
     ship.stop();
   });
+
+
+  // Control list
+  const gui = new dat.GUI();
+  gui.add(physicsWorld.physicalVariables, 'mass', 0, 200000).name('Mass');
+  gui.add(physicsWorld.physicalVariables, 'gravity', 0, 20).name('Gravity');
+  gui.add(physicsWorld.physicalVariables, 'currentRPM', 0, 20).name('RPM');
+  gui.add(physicsWorld.physicalVariables, 'propellerDiameter', 0, 20).name('Propeller Diameter');
+  gui.add(physicsWorld.physicalVariables, 'propellerArea', 0, 20).name('propeller Area');
+  gui.add(physicsWorld.physicalVariables, 'waterDensity', 0, 20).name('Water Density');
+  gui.add(physicsWorld, 'angleY', 0, 20).name('Rotation');
+  
+      
+
 }
 
 function onWindowResize() {
@@ -131,8 +145,7 @@ function onWindowResize() {
 function animate() {
   requestAnimationFrame(animate);
   render();
-  ship.update();
-  //ship.update();
+  physicsWorld.update(0.016); // تحديث PhysicsWorld كل إطار
 }
 
 function render() {

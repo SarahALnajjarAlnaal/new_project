@@ -2,10 +2,9 @@ import { Vector3 } from "three";
 
 import WeightForce from './Forces/WeightForce';
 import BuoyancyForce from './Forces/BuoyancyForce';
-import DragForce from './Forces/DragForce';
+// import DragForce from './Forces/DragForce';
 import ThurstForce from './Forces/ThurstForce';
 import WindForce from './Forces/WindForce';
-
 import hYaw from './Torques/hYaw';
 import WaterResistanceForce from "./Forces/WaterResistanceForce";
 import WaveForce from "./Forces/WaveForce";
@@ -19,7 +18,7 @@ class PhysicsWorld {
   velocity;
   movement;
   angleY; // for turn ship around Y
-  
+  angleZ;
   constants;
   editableConstants;
   physicalVariables;
@@ -43,7 +42,6 @@ class PhysicsWorld {
     // this.angularVelocityY = 0;
     // this.angularVelocityZ = 0;
     this.angleY = 0;
-    // this.angleZ = 0;
 
     this.constants = {
       c: 0.1, // معامل الاحتكاك
@@ -83,18 +81,18 @@ class PhysicsWorld {
       // showCollision: false,
       // collide: true,
     
-      gravity: 9.8,
+      gravity: 10,
       AirDensity:1.2,
-      waterDensity: 1025,
+      waterDensity: 1000,
 
       //ship 
       mass: 100 * 1000,
-      volume: 0, // later..
+      volume: 100, // later..
 
       //propeller
       currentRPM: 0,
       propellerDiameter: 8,
-      propellerArea:0, 
+      propellerArea:3, 
 
       //ruddder
       rudderArea: 0, 
@@ -142,13 +140,13 @@ class PhysicsWorld {
       Velocity: 0,
       
     };
-
+    
   }
   
 
   calculate_mass() {
     const mass = this.physicalVariables.mass;
-
+    // console.log(mass);
     return mass;
   };
 
@@ -163,14 +161,16 @@ class PhysicsWorld {
   };
 
   calculate_waterDensity(){
-
+    return this.physicalVariables.waterDensity;
   }
 
-  calculate_volume() {
-  
+  calculate_volume_under_water() {
+    return this.physicalVariables.mass/this.physicalVariables.waterDensity;
   };
 
-
+  calculate_volume() {
+    return this.physicalVariables.volume;
+  };
   calculate_WaterResistanceArea() {
     
     const sideArea = this.sizes.length  * this.sizes.height ;
@@ -202,10 +202,11 @@ class PhysicsWorld {
   };
 
   calculate_diameter() {
+    return this.physicalVariables.propellerDiameter;
   };
 
   calculate_propellerArea(){
-
+    return this.physicalVariables.propellerArea;
   };
 
 
@@ -245,74 +246,99 @@ class PhysicsWorld {
     return alpha;
   }
 
-  calculate_sigma() {
-    //Sigma = Sum Of Forces
+  // calculate_sigma() {
+  //   //Sigma = Sum Of Forces
   
-    const c =this.constants.c;
-    const cd = this.constants.cd;
+  //   const c =this.constants.c;
+  //   const cd = this.constants.cd;
 
+  //   const mass = this.calculate_mass();
+  //   const gravity = this.calculate_gravity();
+  //   const waterDensity = this.calculate_waterDensity();
+  //   const airDensity = this.calculate_AirDensity();
+  //   const volume = this.calculate_volume();
+
+  //   const RArea = this.calculate_WaterResistanceArea();
+  //   const WArea = this.calculate_WindArea();
+
+  //   const rpm = this.calculate_rpm();
+  //   const propellerDiameter = this.calculate_diameter();
+  //   const propellerArea = this.calculate_propellerArea();
+    
+  //   const velocityLength = this.calculate_velocityLength();
+  //   const movement = this.movement;
+  //   const windVelocityDirection = this.calculate_windVelocityDirection();
+  //   const windVelocityLength = this.calculate_windVelocityLength();
+
+  //   const W = this.forces.W.calculate(mass, gravity);
+  //   const B = this.forces.B.calculate(waterDensity, 0.3 * volume, gravity);
+  //   const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
+  //   const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY,this.angleZ);
+  //   const Wi = this.forces.Wi.calculate(cd, WArea, airDensity, windVelocityLength, windVelocityDirection);
+
+  //   //this.output.WeightX = W.x.toFixed(4)+" N";
+  //   this.output.WeightY = W.y.toFixed(4) + " N";
+  //   //this.output.WeightZ = W.z.toFixed(4)+" N";
+
+  //   //this.output.BuoyancyX = B.x.toFixed(4)+" N";
+  //   this.output.BuoyancyY = B.y.toFixed(4) + " N";
+  //   //this.output.BuoyancyZ = B.z.toFixed(4)+" N";
+
+  //   // this.output.DragX = D.x.toFixed(4) + " N";
+  //   // this.output.DragY = D.y.toFixed(4) + " N";
+  //   // this.output.DragZ = D.z.toFixed(4) + " N";
+
+  //   this.output.ThrustX = T.x.toFixed(4) + " N";
+  //   this.output.ThrustY = T.y.toFixed(4) + " N";
+  //   this.output.ThrustZ = T.z.toFixed(4) + " N";
+  //   this.output.Thrust = T.length().toFixed(4) + " N";
+
+  //   this.output.WindX = Wi.x.toFixed(4) + " N";
+  //   this.output.WindY = Wi.y.toFixed(4) + " N";
+  //   this.output.WindZ = Wi.z.toFixed(4) + " N";
+
+  //   const Sigma = new Vector3().addVectors(
+  //     W,
+  //     new Vector3().addVectors(
+  //       B,
+  //       new Vector3().addVectors(
+  //         R,
+  //         new Vector3().addVectors(
+  //           T,
+  //           Wi
+  //         )
+  //       )
+  //     )
+  //   );
+
+  //   return Sigma;
+  // }
+
+  calculate_sigma() {
     const mass = this.calculate_mass();
     const gravity = this.calculate_gravity();
-    const waterDensity = this.calculate_waterDensity();
-    const airDensity = this.calculate_AirDensity();
-    const volume = this.calculate_volume();
-
-    const RArea = this.calculate_WaterResistanceArea();
-    const WArea = this.calculate_WindArea();
 
     const rpm = this.calculate_rpm();
     const propellerDiameter = this.calculate_diameter();
     const propellerArea = this.calculate_propellerArea();
-    
-    const velocityLength = this.calculate_velocityLength();
-    const movement = this.movement;
-    const windVelocityDirection = this.calculate_windVelocityDirection();
-    const windVelocityLength = this.calculate_windVelocityLength();
+    const waterDensity=this.calculate_waterDensity();
+    const volume = this.calculate_volume_under_water();
 
     const W = this.forces.W.calculate(mass, gravity);
-    const B = this.forces.B.calculate(waterDensity, 0.3 * volume, gravity);
-    const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
     const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY);
-    const Wi = this.forces.Wi.calculate(cd, WArea, airDensity, windVelocityLength, windVelocityDirection);
+    const B = this.forces.B.calculate(waterDensity,volume, gravity);
 
-    //this.output.WeightX = W.x.toFixed(4)+" N";
-    this.output.WeightY = W.y.toFixed(4) + " N";
-    //this.output.WeightZ = W.z.toFixed(4)+" N";
-
-    //this.output.BuoyancyX = B.x.toFixed(4)+" N";
-    this.output.BuoyancyY = B.y.toFixed(4) + " N";
-    //this.output.BuoyancyZ = B.z.toFixed(4)+" N";
-
-    this.output.DragX = D.x.toFixed(4) + " N";
-    this.output.DragY = D.y.toFixed(4) + " N";
-    this.output.DragZ = D.z.toFixed(4) + " N";
-
-    this.output.ThrustX = T.x.toFixed(4) + " N";
-    this.output.ThrustY = T.y.toFixed(4) + " N";
-    this.output.ThrustZ = T.z.toFixed(4) + " N";
-    this.output.Thrust = T.length().toFixed(4) + " N";
-
-    this.output.WindX = Wi.x.toFixed(4) + " N";
-    this.output.WindY = Wi.y.toFixed(4) + " N";
-    this.output.WindZ = Wi.z.toFixed(4) + " N";
-
-    const Sigma = new Vector3().addVectors(
-      W,
-      new Vector3().addVectors(
-        B,
-        new Vector3().addVectors(
-          R,
-          new Vector3().addVectors(
-            T,
-            Wi
-          )
-        )
-      )
-    );
-
-    return Sigma;
+    // جمع القوى
+    const sigma = new Vector3();
+    sigma.add(W);
+    sigma.add(T);
+    sigma.add(B);
+    // console.log(sigma);
+    // console.log(T);
+    // console.log(B);
+    // console.log(W);
+    return sigma;
   }
-
   calculate_acceleration() {
     //a = sigma / m
 
@@ -327,7 +353,7 @@ class PhysicsWorld {
     this.output.AccelerationY = a.y.toFixed(4) + " m.s⁻²";
     this.output.AccelerationZ = a.z.toFixed(4) + " m.s⁻²";
     this.output.Acceleration = a.length().toFixed(4) + " m.s⁻²";
-
+    // console.log(a);
     return a;
   }
 
@@ -346,7 +372,7 @@ class PhysicsWorld {
     this.output.VelocityY = v.y.toFixed(4) + " m.s⁻¹"
     this.output.VelocityZ = v.z.toFixed(4) + " m.s⁻¹"
     this.output.Velocity = v.length().toFixed(4) + " m.s⁻¹"
-
+    // console.log(v);
     return v;
   }
 
@@ -359,29 +385,36 @@ class PhysicsWorld {
 
     const d = new Vector3().addVectors(a.clone().multiplyScalar(0.5 * t ** 2), v.clone().multiplyScalar(t));
 
-    this.movement = d.clone();
-
+    // this.movement = d.clone();
+    this.movement.add(d.divideScalar(1));
+    // console.log(d);
     return d;
   }
 
   calculateRotation(deltaTime) {
     //Calculate Angles From Torques
-
+    
   }
 
   move(d) {
+    const displacement = this.calculateMovement(d);
 
+    // console.log(d);
+    this.target.addMove(displacement.x,displacement.y,displacement.z);
+
+    // this.target.position.add(displacement);
   }
 
   rotate(h, v) {
     //Rotate
-
-    this.target.rotateTo(0, h, v);
+    // console.log(h);
+    this.target.rotate(0, h, v);
   }
 
   update(deltaTime) {
     //Run All Above Functions And Simulate The Physics
-
+    this.move(deltaTime);
+    this.rotate(this.angleY,0);
   }
 }
 
