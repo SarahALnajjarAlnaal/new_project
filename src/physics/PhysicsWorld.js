@@ -2,7 +2,6 @@ import { Vector3 } from "three";
 
 import WeightForce from './Forces/WeightForce';
 import BuoyancyForce from './Forces/BuoyancyForce';
-// import DragForce from './Forces/DragForce';
 import ThurstForce from './Forces/ThurstForce';
 import WindForce from './Forces/WindForce';
 import hYaw from './Torques/hYaw';
@@ -25,7 +24,7 @@ class PhysicsWorld {
   sizes; // for ship , rudder , propeller
 
   output;
-outputFolder;
+  outputFolder;
   forces;
   torques;
 
@@ -70,76 +69,14 @@ outputFolder;
       R: new WaterResistanceForce(),
       T: new ThurstForce(),
       Wi: new WindForce(),
-      // wa: new WaveForce()
+      wa: new WaveForce()
     };
+
     this.torques = {
       H: new hYaw(this.forces.R), 
     };
 
-    // this.physicalVariables = {
-    //   start: false,
-    //   // showCollision: false,
-    //   // collide: true,
-    
-    //   gravity: 10,
-    //   AirDensity:1.2,
-    //   waterDensity: 1000,
-
-    //   //ship 
-    //   mass: 100 * 1000,
-    //   volume: 100, // later..
-
-    //   //propeller
-    //   currentRPM: 0,
-    //   propellerDiameter: 8,
-    //   propellerArea:3, 
-
-    //   //ruddder
-    //   rudderArea: 0, 
-    //   horizontalRudder: 0,
-    
-    //   windVelocity: 0,
-    //   windDirection: { x: 0, y: 0, z: 0 },
-    // };
-
-    // this.output = {
-    //   WeightX: 0,
-    //   WeightY: 0,
-    //   WeightZ: 0,
-    
-    //   BuoyancyX: 0,
-    //   BuoyancyY: 0,
-    //   BuoyancyZ: 0,
-    
-    //   DragX: 0,
-    //   DragY: 0,
-    //   DragZ: 0,
-    
-    //   ThrustX: 0,
-    //   ThrustY: 0,
-    //   ThrustZ: 0,
-    //   Thrust: 0,
-    
-    //   WindX: 0,
-    //   WindY: 0,
-    //   WindZ: 0,
-    
-    //   AccelerationX: 0,
-    //   AccelerationY: 0,
-    //   AccelerationZ: 0,
-    
-    //   VelocityX: 0,
-    //   VelocityY: 0,
-    //   VelocityZ: 0,
-    
-    //   PositionX: 0,
-    //   PositionY: 0,
-    //   PositionZ: 0,
-      
-    //   Acceleration: 0,
-    //   Velocity: 0,
-      
-    // };
+    // !!!!! physicalVariables & output moved to main.js file
   
   }
   calculate_mass() {
@@ -169,11 +106,9 @@ outputFolder;
   calculate_volume() {
     return this.physicalVariables.volume;
   };
-
   calculate_WaterResistanceArea() {
     
     const frontArea = this.sizes.width/2 * this.sizes.height /5 ; 
-
     return  frontArea ; // just in water
   };
 
@@ -181,7 +116,6 @@ outputFolder;
     
     const sideArea = this.sizes.length  * this.sizes.height ;
     const frontArea = 1/3 * this.sizes.width  * this.sizes.height ; // 1/3 forntArea because of Bow
-
     // const sideFactor = Math.abs(Math.cos(angleZ));
     // const frontFactor = Math.abs(Math.sin(angleZ));
 
@@ -313,7 +247,6 @@ outputFolder;
   calculate_sigma() {
     const mass = this.calculate_mass();
     const gravity = this.calculate_gravity();
-
     const rpm = this.calculate_rpm();
     const propellerDiameter = this.calculate_diameter();
     const propellerArea = this.calculate_propellerArea();
@@ -326,7 +259,7 @@ outputFolder;
 
     const velocityLength = this.calculate_velocityLength();
     const movement = this.movement;
-
+    
     const W = this.forces.W.calculate(mass, gravity);
     const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY);
     const B = this.forces.B.calculate(waterDensity,volume, gravity);
@@ -338,14 +271,32 @@ outputFolder;
     sigma.add(T);
     sigma.add(B);
     sigma.add(R);
-    
-    console.log("T:",T);
+
     // console.log(B);
     // console.log(W);
+    console.log("T:",T);
     console.log("R:",R);
     console.log("sigma",sigma);
+
+    //this.output.WeightX = W.x.toFixed(4)+" N";
+    this.output.WeightY = W.y.toFixed(4) + " N";
+    //this.output.WeightZ = W.z.toFixed(4)+" N";
+
+    //this.output.BuoyancyX = B.x.toFixed(4)+" N";
+    this.output.BuoyancyY = B.y.toFixed(4) + " N";
+    //this.output.BuoyancyZ = B.z.toFixed(4)+" N";
+
+    this.output.WaterResistanceX = R.x.toFixed(4) + " N";
+    this.output.WaterResistanceY = R.y.toFixed(4) + " N";
+    this.output.WaterResistanceZ = R.z.toFixed(4) + " N";
+
+    this.output.ThrustX = T.x.toFixed(4) + " N";
+    this.output.ThrustY = T.y.toFixed(4) + " N";
+    this.output.ThrustZ = T.z.toFixed(4) + " N";
+
     return sigma;
   }
+
   calculate_acceleration() {
     //a = sigma / m
 
@@ -395,6 +346,10 @@ outputFolder;
     // this.movement = d.clone();
     this.movement.add(d.divideScalar(1));
     // console.log(d);
+    this.output.PositionX = d.x.toFixed(4) + " m.s⁻¹"
+    this.output.PositionY = d.y.toFixed(4) + " m.s⁻¹"
+    this.output.PositionZ = d.z.toFixed(4) + " m.s⁻¹"
+
     return d;
   }
 
@@ -431,3 +386,6 @@ outputFolder;
 }
 
 export default PhysicsWorld;
+
+
+

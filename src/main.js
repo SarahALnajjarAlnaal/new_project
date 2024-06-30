@@ -7,17 +7,79 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { Ship } from "./ship";
 import PhysicsWorld from "./physics/PhysicsWorld";
-
+import makeGui from "./gui";
 let camera, renderer;
 let controls, water, sun;
-
 const scene = new Scene();
 const ship = new Ship(scene);
 
-const physicsWorld = new PhysicsWorld(ship, {}); // تهيئة PhysicsWorld مع السفينة
+const physicalVariables = {
+  start: false,
+  // showCollision: false,
+  // collide: true,
 
-init();
-animate();
+  gravity: 10,
+  AirDensity:1.2,
+  waterDensity: 1000,
+  //ship 
+  mass: 100 * 1000,
+  volume: 100, // later..
+
+  //propeller
+  currentRPM: 0,
+  propellerDiameter: 8,
+  propellerArea:3, 
+
+  //ruddder
+  rudderArea: 0, 
+  horizontalRudder: 0,
+
+  windVelocity: 0,
+  windDirection: { x: 0, y: 0, z: 0 },
+};
+
+const output = {
+  WeightX: 0,
+  WeightY: 0,
+  WeightZ: 0,
+
+  BuoyancyX: 0,
+  BuoyancyY: 0,
+  BuoyancyZ: 0,
+
+  WaterResistanceX: 0,
+  WaterResistanceY: 0,
+  WaterResistanceZ: 0,
+
+  ThrustX: 0,
+  ThrustY: 0,
+  ThrustZ: 0,
+  Thrust: 0,
+
+  WindX: 0,
+  WindY: 0,
+  WindZ: 0,
+
+  AccelerationX: 0,
+  AccelerationY: 0,
+  AccelerationZ: 0,
+
+  VelocityX: 0,
+  VelocityY: 0,
+  VelocityZ: 0,
+
+  PositionX: 0,
+  PositionY: 0,
+  PositionZ: 0,
+  
+  Acceleration: 0,
+  Velocity: 0,
+  
+};
+const { outgui: outputFolder} = makeGui(output,physicalVariables);
+
+
+const physicsWorld = new PhysicsWorld(ship, {}, output, outputFolder, physicalVariables); // تهيئة PhysicsWorld مع السفينة
 
 async function init() {
   renderer = new THREE.WebGLRenderer();
@@ -92,6 +154,7 @@ async function init() {
 
   updateSun();
 
+  
   controls = new OrbitControls(camera, renderer.domElement);
 
   //to make the movement in the environment controlled
@@ -121,20 +184,9 @@ async function init() {
     ship.stop();
   });
 
-
-  // Control list
-  const gui = new dat.GUI();
-  gui.add(physicsWorld.physicalVariables, 'mass', 0, 200000).name('Mass');
-  gui.add(physicsWorld.physicalVariables, 'gravity', 0, 20).name('Gravity');
-  gui.add(physicsWorld.physicalVariables, 'currentRPM', 0, 20).name('RPM');
-  gui.add(physicsWorld.physicalVariables, 'propellerDiameter', 0, 20).name('Propeller Diameter');
-  gui.add(physicsWorld.physicalVariables, 'propellerArea', 0, 20).name('propeller Area');
-  gui.add(physicsWorld.physicalVariables, 'waterDensity', 0, 20).name('Water Density');
-  gui.add(physicsWorld, 'angleY', 0, 20).name('Rotation');
-  
-      
-
 }
+
+init();
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -147,6 +199,8 @@ function animate() {
   render();
   physicsWorld.update(0.016); // تحديث PhysicsWorld كل إطار
 }
+
+animate();
 
 function render() {
   water.material.uniforms["time"].value += 1.0 / 60.0;
