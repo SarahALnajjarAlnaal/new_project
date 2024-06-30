@@ -171,15 +171,12 @@ class PhysicsWorld {
   calculate_volume() {
     return this.physicalVariables.volume;
   };
+
   calculate_WaterResistanceArea() {
     
-    const sideArea = this.sizes.length  * this.sizes.height ;
-    const frontArea = 1/3 * this.sizes.width  * this.sizes.height ; // 1/3 forntArea because of Bow
+    const frontArea = this.sizes.width/2 * this.sizes.height /5 ; 
 
-    // const sideFactor = Math.abs(Math.cos(angleZ));
-    // const frontFactor = Math.abs(Math.sin(angleZ));
-
-    return 1/3 *( sideArea * 2 + frontArea); // just in water
+    return  frontArea ; // just in water
   };
 
   calculate_WindArea() {
@@ -194,6 +191,7 @@ class PhysicsWorld {
   };
 
   calculate_velocityLength() {
+    console.log("velocity",this.velocity);
     return this.velocity.length();
   };
 
@@ -324,19 +322,30 @@ class PhysicsWorld {
     const waterDensity=this.calculate_waterDensity();
     const volume = this.calculate_volume_under_water();
 
+    const c =this.constants.c;
+    const RArea = this.calculate_WaterResistanceArea();
+
+
+    const velocityLength = this.calculate_velocityLength();
+    const movement = this.movement;
+
     const W = this.forces.W.calculate(mass, gravity);
     const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY);
     const B = this.forces.B.calculate(waterDensity,volume, gravity);
+    const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
 
     // جمع القوى
     const sigma = new Vector3();
     sigma.add(W);
     sigma.add(T);
     sigma.add(B);
-    // console.log(sigma);
-    // console.log(T);
+    sigma.add(R);
+    
+    console.log("T:",T);
     // console.log(B);
     // console.log(W);
+    console.log("R:",R);
+    console.log("sigma",sigma);
     return sigma;
   }
   calculate_acceleration() {
