@@ -8,7 +8,6 @@ import WindForce from './Forces/WindForce';
 import hYaw from './Torques/hYaw';
 import WaterResistanceForce from "./Forces/WaterResistanceForce";
 import WaveForce from "./Forces/WaveForce";
-
 class PhysicsWorld {
 
   target; // ship 
@@ -26,19 +25,20 @@ class PhysicsWorld {
   sizes; // for ship , rudder , propeller
 
   output;
-
+outputFolder;
   forces;
   torques;
 
 
-  constructor(target, controls) {
+  constructor(target, controls,output,outputFolder,physicalVariables) {
     this.target = target;
     this.controls = controls;
-    
+    this.output=output;
+    this.outputFolder=outputFolder;
+    this.physicalVariables=physicalVariables;
     this.acceleration = new Vector3();
     this.velocity = new Vector3();
     this.movement = new Vector3();
-    
     // this.angularVelocityY = 0;
     // this.angularVelocityZ = 0;
     this.angleY = 0;
@@ -76,74 +76,72 @@ class PhysicsWorld {
       H: new hYaw(this.forces.R), 
     };
 
-    this.physicalVariables = {
-      start: false,
-      // showCollision: false,
-      // collide: true,
+    // this.physicalVariables = {
+    //   start: false,
+    //   // showCollision: false,
+    //   // collide: true,
     
-      gravity: 10,
-      AirDensity:1.2,
-      waterDensity: 1000,
+    //   gravity: 10,
+    //   AirDensity:1.2,
+    //   waterDensity: 1000,
 
-      //ship 
-      mass: 100 * 1000,
-      volume: 100, // later..
+    //   //ship 
+    //   mass: 100 * 1000,
+    //   volume: 100, // later..
 
-      //propeller
-      currentRPM: 0,
-      propellerDiameter: 8,
-      propellerArea:3, 
+    //   //propeller
+    //   currentRPM: 0,
+    //   propellerDiameter: 8,
+    //   propellerArea:3, 
 
-      //ruddder
-      rudderArea: 0, 
-      horizontalRudder: 0,
+    //   //ruddder
+    //   rudderArea: 0, 
+    //   horizontalRudder: 0,
     
-      windVelocity: 0,
-      windDirection: { x: 0, y: 0, z: 0 },
-    };
+    //   windVelocity: 0,
+    //   windDirection: { x: 0, y: 0, z: 0 },
+    // };
 
-    this.output = {
-      WeightX: 0,
-      WeightY: 0,
-      WeightZ: 0,
+    // this.output = {
+    //   WeightX: 0,
+    //   WeightY: 0,
+    //   WeightZ: 0,
     
-      BuoyancyX: 0,
-      BuoyancyY: 0,
-      BuoyancyZ: 0,
+    //   BuoyancyX: 0,
+    //   BuoyancyY: 0,
+    //   BuoyancyZ: 0,
     
-      DragX: 0,
-      DragY: 0,
-      DragZ: 0,
+    //   DragX: 0,
+    //   DragY: 0,
+    //   DragZ: 0,
     
-      ThrustX: 0,
-      ThrustY: 0,
-      ThrustZ: 0,
-      Thrust: 0,
+    //   ThrustX: 0,
+    //   ThrustY: 0,
+    //   ThrustZ: 0,
+    //   Thrust: 0,
     
-      WindX: 0,
-      WindY: 0,
-      WindZ: 0,
+    //   WindX: 0,
+    //   WindY: 0,
+    //   WindZ: 0,
     
-      AccelerationX: 0,
-      AccelerationY: 0,
-      AccelerationZ: 0,
+    //   AccelerationX: 0,
+    //   AccelerationY: 0,
+    //   AccelerationZ: 0,
     
-      VelocityX: 0,
-      VelocityY: 0,
-      VelocityZ: 0,
+    //   VelocityX: 0,
+    //   VelocityY: 0,
+    //   VelocityZ: 0,
     
-      PositionX: 0,
-      PositionY: 0,
-      PositionZ: 0,
+    //   PositionX: 0,
+    //   PositionY: 0,
+    //   PositionZ: 0,
       
-      Acceleration: 0,
-      Velocity: 0,
+    //   Acceleration: 0,
+    //   Velocity: 0,
       
-    };
-    
-  }
+    // };
   
-
+  }
   calculate_mass() {
     const mass = this.physicalVariables.mass;
     // console.log(mass);
@@ -410,11 +408,16 @@ class PhysicsWorld {
     // console.log(h);
     this.target.rotate(0, h, v);
   }
+ 
 
   update(deltaTime) {
     //Run All Above Functions And Simulate The Physics
     this.move(deltaTime);
+   
+
     this.rotate(this.angleY,0);
+   this.outputFolder.children.map(e => e.updateDisplay());
+
   }
 }
 
