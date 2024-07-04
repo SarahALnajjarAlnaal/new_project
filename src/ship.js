@@ -7,8 +7,8 @@ export class Ship {
     loader.load("assets/ship/scene.gltf", (gltf) => {
       scene.add(gltf.scene);
       gltf.scene.scale.set(100, 100, 100);
-      gltf.scene.position.set(5, 0, -50);
-      gltf.scene.rotation.y = 1.5;
+      gltf.scene.position.set(0, 0, -50);
+      gltf.scene.rotation.y = 0;
 
       this.ship = gltf.scene;
       this.speed = {
@@ -16,6 +16,17 @@ export class Ship {
         rot: 0,
       };
     });
+  }
+  get position(){
+    if(this.ship){
+     return this.ship?.position;
+    }
+  }
+
+  get rotation(){
+    if(this.ship){
+      return this.ship.rotation;
+    }
   }
 
   addMove(dx, dy, dz) {
@@ -37,9 +48,9 @@ export class Ship {
   }
   rotate(dx, dy, dz) {
     if(this.ship){
-      // this.ship.rotation.x += dx;
+      this.ship.rotation.x += dx;
       this.ship.rotation.y = dy;
-      // this.ship.rotation.z += dz;
+      this.ship.rotation.z += dz;
     }
   } 
   stop() {

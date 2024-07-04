@@ -36,6 +36,9 @@ const physicalVariables = {
 
   windVelocity: 0,
   windDirection: { x: 0, y: 0, z: 0 },
+
+  waveVelocity: 0,
+  waveDirection: { x: -1, y: 0, z: 0 },
 };
 
 const output = {
@@ -60,6 +63,10 @@ const output = {
   WindY: 0,
   WindZ: 0,
 
+  WaveX: 0,
+  WaveY: 0,
+  WaveZ: 0,
+  
   AccelerationX: 0,
   AccelerationY: 0,
   AccelerationZ: 0,

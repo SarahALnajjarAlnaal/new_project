@@ -14,20 +14,18 @@ class WaveForce extends Force {
     return new Vector3();
   };
 
-  // calculate(Cd, frontArea, density, volume, movement) {
-  //   const cd = Cd;
-  //   const A = frontArea;
-  //   const p = density;
-  //   const v = velocityLength;
+  calculate(rho, Cd, A, u, CM, V, du_dt,movement) {
+    const F_D = 0.5 * rho * Cd * A * u * Math.abs(u) * 0.002;
+    const F_I = rho * CM * V * du_dt;
 
-  //   this.direction = this.compute_direction(movement);
+    this.direction = this.compute_direction(movement);
 
-  //   const strength = 0.5 * c * A * p * (v ** 2);
-
-  //   const D = this.direction.clone().multiplyScalar(strength);
-
-  //   return D;
-  // };
+    const strength = F_D + F_I;
+    
+    const Wa = this.direction.clone().multiplyScalar(strength);
+    return Wa;
+  }
+  
 };
 
 export default WaveForce;

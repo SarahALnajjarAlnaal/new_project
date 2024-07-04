@@ -16,6 +16,7 @@ class PhysicsWorld {
   velocity;
   movement;
   angleY; // for turn ship around Y
+  angleX;
   angleZ;
   constants;
   editableConstants;
@@ -28,6 +29,7 @@ class PhysicsWorld {
   forces;
   torques;
 
+  dampingFactor;
 
   constructor(target, controls,output,outputFolder,physicalVariables) {
     this.target = target;
@@ -44,7 +46,8 @@ class PhysicsWorld {
 
     this.constants = {
       c: 0.1, // معامل الاحتكاك
-      cd: 0.8 // معامل السحب
+      cd: 0.8, // معامل السحب
+      cm: 0.9, // معامل القصور الذاتي
     };
 
     this.editableConstants = {
@@ -68,16 +71,18 @@ class PhysicsWorld {
       B: new BuoyancyForce(),
       R: new WaterResistanceForce(),
       T: new ThurstForce(),
+      Wa: new WaveForce(),
       Wi: new WindForce(),
-      wa: new WaveForce()
+      
     };
 
-    this.torques = {
+    this.torques = {//2
       H: new hYaw(this.forces.R), 
+      Z: new hYaw(this.forces.Wa), //x مسببه قوة امواج منطبقة على  z عزم حول المحور 
+      X: new hYaw(this.forces.Wa),
     };
 
-    // !!!!! physicalVariables & output moved to main.js file
-  
+    this.dampingFactor = 0.95;
   }
   calculate_mass() {
     const mass = this.physicalVariables.mass;
@@ -87,12 +92,11 @@ class PhysicsWorld {
 
   calculate_gravity() {
     const gravity = this.physicalVariables.gravity;
-
     return gravity;
   };
 
   calculate_AirDensity(){
-
+    return this.physicalVariables.AirDensity;
   };
 
   calculate_waterDensity(){
@@ -108,23 +112,30 @@ class PhysicsWorld {
   };
   calculate_WaterResistanceArea() {
     
-    const frontArea = this.sizes.width/2 * this.sizes.height /5 ; 
+    const frontArea = this.sizes.width/3 * this.sizes.height /5 ; 
+    //const frontArea = 1/100 *  this.sizes.width * this.sizes.length  ; 
     return  frontArea ; // just in water
+    
   };
 
   calculate_WindArea() {
     
-    const sideArea = this.sizes.length  * this.sizes.height ;
-    const frontArea = 1/3 * this.sizes.width  * this.sizes.height ; // 1/3 forntArea because of Bow
-    // const sideFactor = Math.abs(Math.cos(angleZ));
+    const sideArea  = this.sizes.length  * this.sizes.height/5 ;
+    const frontArea = this.sizes.width  * this.sizes.height/5 ; 
+
+    // const sideFactor = Math.abs(Math.cos(angleZ)); 
     // const frontFactor = Math.abs(Math.sin(angleZ));
 
-    return 2/3 *( sideArea * 2 + frontArea); // just in Air
+    return (sideArea + frontArea); // just in Air
   };
 
   calculate_velocityLength() {
-    console.log("velocity",this.velocity);
+    // console.log("velocity",this.velocity);
     return this.velocity.length();
+  };
+
+  calculate_accelerationLength() { 
+    return this.acceleration.length();
   };
 
   calculate_rpm() {
@@ -151,7 +162,6 @@ class PhysicsWorld {
 
   calculate_windVelocityLength() {
     const windVelocityLength = this.physicalVariables.windVelocity;
-
     return windVelocityLength;
   }
 
@@ -169,82 +179,45 @@ class PhysicsWorld {
     return windVelocityDirection;
   }
 
-  
+  calculate_waveVelocityDirection() {
+    const waveX = this.physicalVariables.waveDirection.x;
+    const waveY = this.physicalVariables.waveDirection.y;
+    const waveZ = this.physicalVariables.waveDirection.z;
+
+    const waveVelocityDirection = new Vector3(
+      waveX,
+      waveY,
+      waveZ
+    );
+    return waveVelocityDirection;
+  }
+
+  calculate_waveVelocityLength() {
+    const waveVelocityLength = this.physicalVariables.waveVelocity;
+    return waveVelocityLength;
+  }
   calculateHAlpha() {
     const alpha = this.physicalVariables.horizontalRudder * Math.PI / 180;
 
     return alpha;
   }
 
-  // calculate_sigma() {
-  //   //Sigma = Sum Of Forces
-  
-  //   const c =this.constants.c;
-  //   const cd = this.constants.cd;
+  calculateZAlpha() {
+    const alpha = this.sizes.length * 1/2 * Math.PI / 180;
 
-  //   const mass = this.calculate_mass();
-  //   const gravity = this.calculate_gravity();
-  //   const waterDensity = this.calculate_waterDensity();
-  //   const airDensity = this.calculate_AirDensity();
-  //   const volume = this.calculate_volume();
+    return alpha;
+  }
 
-  //   const RArea = this.calculate_WaterResistanceArea();
-  //   const WArea = this.calculate_WindArea();
+  calculateXAlpha() {
+    const alpha = this.sizes.width * 1/2 * Math.PI / 180;
 
-  //   const rpm = this.calculate_rpm();
-  //   const propellerDiameter = this.calculate_diameter();
-  //   const propellerArea = this.calculate_propellerArea();
-    
-  //   const velocityLength = this.calculate_velocityLength();
-  //   const movement = this.movement;
-  //   const windVelocityDirection = this.calculate_windVelocityDirection();
-  //   const windVelocityLength = this.calculate_windVelocityLength();
-
-  //   const W = this.forces.W.calculate(mass, gravity);
-  //   const B = this.forces.B.calculate(waterDensity, 0.3 * volume, gravity);
-  //   const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
-  //   const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY,this.angleZ);
-  //   const Wi = this.forces.Wi.calculate(cd, WArea, airDensity, windVelocityLength, windVelocityDirection);
-
-  //   //this.output.WeightX = W.x.toFixed(4)+" N";
-  //   this.output.WeightY = W.y.toFixed(4) + " N";
-  //   //this.output.WeightZ = W.z.toFixed(4)+" N";
-
-  //   //this.output.BuoyancyX = B.x.toFixed(4)+" N";
-  //   this.output.BuoyancyY = B.y.toFixed(4) + " N";
-  //   //this.output.BuoyancyZ = B.z.toFixed(4)+" N";
-
-  //   // this.output.DragX = D.x.toFixed(4) + " N";
-  //   // this.output.DragY = D.y.toFixed(4) + " N";
-  //   // this.output.DragZ = D.z.toFixed(4) + " N";
-
-  //   this.output.ThrustX = T.x.toFixed(4) + " N";
-  //   this.output.ThrustY = T.y.toFixed(4) + " N";
-  //   this.output.ThrustZ = T.z.toFixed(4) + " N";
-  //   this.output.Thrust = T.length().toFixed(4) + " N";
-
-  //   this.output.WindX = Wi.x.toFixed(4) + " N";
-  //   this.output.WindY = Wi.y.toFixed(4) + " N";
-  //   this.output.WindZ = Wi.z.toFixed(4) + " N";
-
-  //   const Sigma = new Vector3().addVectors(
-  //     W,
-  //     new Vector3().addVectors(
-  //       B,
-  //       new Vector3().addVectors(
-  //         R,
-  //         new Vector3().addVectors(
-  //           T,
-  //           Wi
-  //         )
-  //       )
-  //     )
-  //   );
-
-  //   return Sigma;
-  // }
+    return alpha;
+  }
 
   calculate_sigma() {
+    const velocityLength = this.calculate_velocityLength();
+    const accelerationLength = this.calculate_accelerationLength();
+    const movement = this.movement;
     const mass = this.calculate_mass();
     const gravity = this.calculate_gravity();
     const rpm = this.calculate_rpm();
@@ -256,28 +229,41 @@ class PhysicsWorld {
     const c =this.constants.c;
     const RArea = this.calculate_WaterResistanceArea();
 
+    const cd = this.constants.cd;
+    const airDensity = this.calculate_AirDensity();
+    const WArea = this.calculate_WindArea();
+    const windVelocityLength = this.calculate_windVelocityLength();
+    const windVelocityDirection= this.calculate_windVelocityDirection();
+    const windRelativeVelocity = windVelocityLength-velocityLength ;
 
-    const velocityLength = this.calculate_velocityLength();
-    const movement = this.movement;
-    
+    const cm = this.constants.cm;
+    const waveVelocity = this.calculate_waveVelocityLength();
+    const waveVelocityDirection= this.calculate_waveVelocityDirection();
+    const waveRelativeVelocity = waveVelocity-velocityLength ;
+
     const W = this.forces.W.calculate(mass, gravity);
     const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY);
     const B = this.forces.B.calculate(waterDensity,volume, gravity);
     const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
+    const Wi =this.forces.Wi.calculate(cd, WArea, airDensity, windRelativeVelocity, windVelocityDirection);
+    const Wa =this.forces.Wa.calculate(waterDensity,c,RArea,waveRelativeVelocity,cm,100,accelerationLength,waveVelocityDirection);
 
+   
     // جمع القوى
     const sigma = new Vector3();
     sigma.add(W);
     sigma.add(T);
     sigma.add(B);
     sigma.add(R);
+    sigma.add(Wi);
+    sigma.add(Wa);
 
     // console.log(B);
     // console.log(W);
-    console.log("T:",T);
-    console.log("R:",R);
+    // console.log("T:",T);
+    // console.log("R:",R);
+    // console.log("Wa",Wa);
     console.log("sigma",sigma);
-
     //this.output.WeightX = W.x.toFixed(4)+" N";
     this.output.WeightY = W.y.toFixed(4) + " N";
     //this.output.WeightZ = W.z.toFixed(4)+" N";
@@ -293,7 +279,14 @@ class PhysicsWorld {
     this.output.ThrustX = T.x.toFixed(4) + " N";
     this.output.ThrustY = T.y.toFixed(4) + " N";
     this.output.ThrustZ = T.z.toFixed(4) + " N";
+   
+    this.output.WindX = Wi.x.toFixed(4) + " N";
+    this.output.WindY = Wi.y.toFixed(4) + " N";
+    this.output.WindZ = Wi.z.toFixed(4) + " N";
 
+    this.output.WaveX = Wa.x.toFixed(4) + " N";
+    this.output.WaveY = Wa.y.toFixed(4) + " N";
+    this.output.WaveZ = Wa.z.toFixed(4) + " N";
     return sigma;
   }
 
@@ -343,43 +336,91 @@ class PhysicsWorld {
 
     const d = new Vector3().addVectors(a.clone().multiplyScalar(0.5 * t ** 2), v.clone().multiplyScalar(t));
 
-    // this.movement = d.clone();
-    this.movement.add(d.divideScalar(1));
-    // console.log(d);
-    this.output.PositionX = d.x.toFixed(4) + " m.s⁻¹"
-    this.output.PositionY = d.y.toFixed(4) + " m.s⁻¹"
-    this.output.PositionZ = d.z.toFixed(4) + " m.s⁻¹"
+    this.movement = d.clone();  
+    // this.movement.add(d.divideScalar(1));
+    // console.log("Position",d);
+    // this.output.PositionX = d.x.toFixed(6) + " m"
+    // this.output.PositionY = d.y.toFixed(6) + " m"
+    // this.output.PositionZ = d.z.toFixed(6) + " m"
+    const x=this.target.position?.x.toFixed(4)??0;
+    const y=this.target.position?.y.toFixed(4)??0;
+    const z=this.target.position?.z.toFixed(4)??0;
+    this.output.PositionX = x +" m" ;
+    this.output.PositionY = y + " m";
+    this.output.PositionZ = z + " m";
 
     return d;
   }
 
   calculateRotation(deltaTime) {
+    
+    const waterDensity=this.calculate_waterDensity();
+    const volume = this.calculate_volume_under_water();
+
+    const c =this.constants.c;
+    const RArea = this.calculate_WaterResistanceArea();
+
+    const cm = this.constants.cm;
+    const waveVelocity = this.calculate_waveVelocityLength();
+    const velocityLength = this.calculate_velocityLength();
+    const accelerationLength = this.calculate_accelerationLength();//2
+    const waveVelocityDirection= this.calculate_waveVelocityDirection();
+    const relativeVelocity = (waveVelocity!==0) ? waveVelocity-velocityLength: 0;
+
     //Calculate Angles From Torques
+    const zAlpha = this.calculateZAlpha();
+    const xAlpha = this.calculateXAlpha();
+    
+    if(waveVelocity!==0 ){
+      const Wa = this.forces.Wa.calculate(waterDensity,c,RArea,relativeVelocity,cm,
+                                          100,accelerationLength,waveVelocityDirection);
+      this.angleZ = this.torques.Z.calculate(zAlpha,zAlpha*0.9998 ,Wa.x);
+      this.angleX = this.torques.X.calculate(xAlpha,xAlpha*0.9998,Wa.z);
+    }else{
+      this.angleZ = 0;
+      this.angleX = 0;
+    }
+  }
+
+  move(displacement) {
+    this.target.addMove(displacement.x,displacement.y,displacement.z);
+  }
+
+  rotate(x,h, v) {
+    this.target.rotate(x, h, v);
+  }
+ 
+  performWaveRotations() {
+    const initialAngleZ = 0.01;//Math.min(0.01, this.angleZ);
+    const initialAngleX = 0.01;// Math.min(0.01, this.angleX);
+
+    this.rotate(-initialAngleX,this.angleY, initialAngleZ);
+    // this.target.addMove(0,this.angleZ*0.5,0);
+
+    setTimeout(() => {
+    this.rotate(initialAngleX,this.angleY, -initialAngleZ);
+    // this.target.addMove(0,initialAngleZ*0.5,0);
+    // this.physicalVariables.waveVelocity *= this.dampingFactor;
+    this.physicalVariables.waveVelocity = 0;
+      if (this.physicalVariables.waveVelocity < 0.1) {
+        this.physicalVariables.waveVelocity = 0;
+      }   
+    }, 500); 
     
   }
 
-  move(d) {
-    const displacement = this.calculateMovement(d);
-
-    // console.log(d);
-    this.target.addMove(displacement.x,displacement.y,displacement.z);
-
-    // this.target.position.add(displacement);
-  }
-
-  rotate(h, v) {
-    //Rotate
-    // console.log(h);
-    this.target.rotate(0, h, v);
-  }
- 
-
   update(deltaTime) {
+    
     //Run All Above Functions And Simulate The Physics
-    this.move(deltaTime);
-   
+    const d = this.calculateMovement(deltaTime);
+    
+    this.move(d);
+    
+    this.calculateRotation(deltaTime);
 
-    this.rotate(this.angleY,0);
+    if( this.angleZ || this.angleX ) {
+      this.performWaveRotations();
+    }
    this.outputFolder.children.map(e => e.updateDisplay());
 
   }
