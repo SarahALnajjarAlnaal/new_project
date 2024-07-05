@@ -12,7 +12,7 @@ function makeGui( output,physicalVariables) {
    gui.add(physicalVariables, 'propellerDiameter', 0, 20).name('Propeller Diameter');
    gui.add(physicalVariables, 'propellerArea', 0, 20).name('propeller Area');
    gui.add(physicalVariables, 'waterDensity', 0, 20).name('Water Density');
-   //gui.add(physicsWorld, 'angleY', 0, 20).name('Rotation');
+   gui.add(physicalVariables, 'angleRudder', 0, 9).name('angle Rudder');
 
    const waveDirectionFolder = gui.addFolder('Wave');
    waveDirectionFolder.add(physicalVariables, 'waveVelocity', 0, 30).name('Wave Velocity').listen();

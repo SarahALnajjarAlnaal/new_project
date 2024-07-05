@@ -49,7 +49,7 @@ export class Ship {
   rotate(dx, dy, dz) {
     if(this.ship){
       this.ship.rotation.x += dx;
-      this.ship.rotation.y = dy;
+      this.ship.rotation.y  = dy;
       this.ship.rotation.z += dz;
     }
   } 

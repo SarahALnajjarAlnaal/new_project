@@ -22,6 +22,10 @@ class PhysicsWorld {
   editableConstants;
   physicalVariables;
 
+
+  angular_acceleration;
+  angular_velocity;
+
   sizes; // for ship , rudder , propeller
 
   output;
@@ -43,6 +47,8 @@ class PhysicsWorld {
     // this.angularVelocityY = 0;
     // this.angularVelocityZ = 0;
     this.angleY = 0;
+    this.angular_acceleration=0;
+    this.angular_velocity=0;
 
     this.constants = {
       c: 0.1, // معامل الاحتكاك
@@ -214,6 +220,12 @@ class PhysicsWorld {
     return alpha;
   }
 
+  calculateVAlpha() {
+    const alpha = this.physicalVariables.angleRudder * Math.PI / 180;
+    // console.log("alpha: ",alpha);
+    return alpha;
+  }
+
   calculate_sigma() {
     const velocityLength = this.calculate_velocityLength();
     const accelerationLength = this.calculate_accelerationLength();
@@ -242,7 +254,7 @@ class PhysicsWorld {
     const waveRelativeVelocity = waveVelocity-velocityLength ;
 
     const W = this.forces.W.calculate(mass, gravity);
-    const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity, this.angleY);
+    const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity,velocityLength, this.angleY);
     const B = this.forces.B.calculate(waterDensity,volume, gravity);
     const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
     const Wi =this.forces.Wi.calculate(cd, WArea, airDensity, windRelativeVelocity, windVelocityDirection);
@@ -263,7 +275,7 @@ class PhysicsWorld {
     // console.log("T:",T);
     // console.log("R:",R);
     // console.log("Wa",Wa);
-    console.log("sigma",sigma);
+    // console.log("sigma",sigma);
     //this.output.WeightX = W.x.toFixed(4)+" N";
     this.output.WeightY = W.y.toFixed(4) + " N";
     //this.output.WeightZ = W.z.toFixed(4)+" N";
@@ -382,6 +394,62 @@ class PhysicsWorld {
     }
   }
 
+  calculateTorque() {
+    //Calculate Angles From Torques
+      const waterDensity=this.calculate_waterDensity();
+      const c =this.constants.c;
+      const RArea = this.calculate_WaterResistanceArea();
+      const velocityLength = this.calculate_velocityLength();
+      const movement = this.movement;
+      const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
+      const vAlpha = this.calculateVAlpha();
+
+      const hY=this.torques.H.calculateM(vAlpha,R.length());
+
+    //  console.log("hY",hY);
+
+      return hY;
+  }
+
+  calculate_angular_acceleration() {
+    //alpha = M / I
+
+    const M = this.calculateTorque();
+    const I = 30000000;
+
+    const alphaAcce = M/I; //  M / I
+
+    this.angular_acceleration = alphaAcce;
+
+    // console.log("alphaAcce",alphaAcce);
+    return alphaAcce;
+  }
+
+  calculate_angular_velocity(deltaTime) {
+    //w = alphaAcc * t + w0
+
+    const w0 = this.angular_velocity;
+    const t = deltaTime;
+    const alphaAcc = this.calculate_angular_acceleration();
+    const w=(alphaAcc*t)+w0;
+    // this.velocity = v.clone();
+    // console.log("W",w);
+    return w;
+  }
+
+  calculate_angular(deltaTime) {
+    //delta position = 0.5 * alphaAcc * t ^ 2 + w * t
+
+    const t = deltaTime;
+    const w = this.calculate_angular_velocity(t);
+    const alphaAcc = this.angular_acceleration;
+    const teta=0.5*(alphaAcc*(t**2))+(w*t);
+    // this.angleY+=teta*5;
+    // console.log("teta",teta);
+
+    return teta;
+  }
+
   move(displacement) {
     this.target.addMove(displacement.x,displacement.y,displacement.z);
   }
@@ -394,11 +462,11 @@ class PhysicsWorld {
     const initialAngleZ = 0.01;//Math.min(0.01, this.angleZ);
     const initialAngleX = 0.01;// Math.min(0.01, this.angleX);
 
-    this.rotate(-initialAngleX,this.angleY, initialAngleZ);
+    this.rotate(-initialAngleX,0, initialAngleZ);
     // this.target.addMove(0,this.angleZ*0.5,0);
 
     setTimeout(() => {
-    this.rotate(initialAngleX,this.angleY, -initialAngleZ);
+    this.rotate(initialAngleX,0, -initialAngleZ);
     // this.target.addMove(0,initialAngleZ*0.5,0);
     // this.physicalVariables.waveVelocity *= this.dampingFactor;
     this.physicalVariables.waveVelocity = 0;
@@ -417,7 +485,10 @@ class PhysicsWorld {
     this.move(d);
     
     this.calculateRotation(deltaTime);
-
+    const angle=this.calculate_angular(deltaTime);
+    // console.log("angle ",angle);
+    this.angleY+=angle*5; 
+    this.rotate(0,this.angleY,0);
     if( this.angleZ || this.angleX ) {
       this.performWaveRotations();
     }

@@ -24,7 +24,7 @@ const physicalVariables = {
   //ship 
   mass: 100 * 1000,
   volume: 100, // later..
-
+  angleRudder:0,
   //propeller
   currentRPM: 0,
   propellerDiameter: 8,
