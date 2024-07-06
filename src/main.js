@@ -1,17 +1,24 @@
 import "./style.css";
 import * as THREE from "three";
-import * as dat from 'dat.gui';
+import * as dat from "dat.gui";
 import { Scene } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { Ship } from "./ship";
+import { GUI } from "lil-gui";
 import PhysicsWorld from "./physics/PhysicsWorld";
 import makeGui from "./gui";
 let camera, renderer;
 let controls, water, sun;
 const scene = new Scene();
-const ship = new Ship(scene);
+camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+const ship = new Ship(scene, camera);
 
 const physicalVariables = {
   start: false,
@@ -19,19 +26,19 @@ const physicalVariables = {
   // collide: true,
 
   gravity: 10,
-  AirDensity:1.2,
+  AirDensity: 1.2,
   waterDensity: 1000,
-  //ship 
+  //ship
   mass: 100 * 1000,
   volume: 100, // later..
-  angleRudder:0,
+  angleRudder: 0,
   //propeller
   currentRPM: 0,
   propellerDiameter: 8,
-  propellerArea:3, 
+  propellerArea: 3,
 
   //ruddder
-  rudderArea: 0, 
+  rudderArea: 0,
   horizontalRudder: 0,
 
   windVelocity: 0,
@@ -66,7 +73,7 @@ const output = {
   WaveX: 0,
   WaveY: 0,
   WaveZ: 0,
-  
+
   AccelerationX: 0,
   AccelerationY: 0,
   AccelerationZ: 0,
@@ -78,15 +85,20 @@ const output = {
   PositionX: 0,
   PositionY: 0,
   PositionZ: 0,
-  
+
   Acceleration: 0,
   Velocity: 0,
-  
 };
-const { outgui: outputFolder} = makeGui(output,physicalVariables);
+const { outgui: outputFolder } = makeGui(output, physicalVariables);
 
-
-const physicsWorld = new PhysicsWorld(ship, {}, output, outputFolder, physicalVariables); // تهيئة PhysicsWorld مع السفينة
+const physicsWorld = new PhysicsWorld(
+  ship,
+  {},
+  output,
+  outputFolder,
+  physicalVariables,
+  camera
+); // تهيئة PhysicsWorld مع السفينة
 
 async function init() {
   renderer = new THREE.WebGLRenderer();
@@ -95,17 +107,14 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   document.body.appendChild(renderer.domElement);
 
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.set(30, 50, 100);
+  // camera.position.set(30, 50, 100);
 
   sun = new THREE.Vector3();
 
-  const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
+  const waterGeometry = new THREE.PlaneGeometry(
+    physicsWorld.worldControl.waterSize,
+    physicsWorld.worldControl.waterSize
+  );
 
   water = new Water(waterGeometry, {
     textureWidth: 512,
@@ -117,9 +126,10 @@ async function init() {
       }
     ),
     sunDirection: new THREE.Vector3(),
-    sunColor: 0xffffff,
+    sunColor: 0xff0000,
     waterColor: 0x001e0f,
     distortionScale: 3.7,
+
     fog: scene.fog !== undefined,
   });
 
@@ -130,7 +140,7 @@ async function init() {
 
   // Skybox
   const sky = new Sky();
-  sky.scale.setScalar(10000);
+  sky.scale.setScalar(physicsWorld.worldControl.waterSize);
   scene.add(sky);
 
   const skyUniforms = sky.material.uniforms;
@@ -142,12 +152,12 @@ async function init() {
 
   const parameters = {
     elevation: 1.5,
-    azimuth: 180,
+    azimuth: 60,
   };
 
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
 
-  function updateSun() {
+  async function updateSun() {
     const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
     const theta = THREE.MathUtils.degToRad(parameters.azimuth);
 
@@ -161,15 +171,14 @@ async function init() {
 
   updateSun();
 
-  
-  controls = new OrbitControls(camera, renderer.domElement);
+  // controls = new OrbitControls(camera, renderer.domElement);
 
-  //to make the movement in the environment controlled
-  controls.maxPolarAngle = Math.PI * 0.495;
-  controls.target.set(0, 10, 0);
-  controls.minDistance = 40.0;
-  controls.maxDistance = 200.0;
-  controls.update();
+  // //to make the movement in the environment controlled
+  // controls.maxPolarAngle = Math.PI * 0.495;
+  // controls.target.set(0, 10, 0);
+  // controls.minDistance = 40.0;
+  // controls.maxDistance = 200.0;
+  // controls.update();
 
   window.addEventListener("resize", onWindowResize);
 
@@ -190,7 +199,6 @@ async function init() {
   window.addEventListener("keyup", function (e) {
     ship.stop();
   });
-
 }
 
 init();
@@ -205,6 +213,7 @@ function animate() {
   requestAnimationFrame(animate);
   render();
   physicsWorld.update(0.016); // تحديث PhysicsWorld كل إطار
+  ship.updateCameraPosition();
 }
 
 animate();

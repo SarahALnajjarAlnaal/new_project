@@ -13,7 +13,6 @@ body {
   top: 0;
   left: 0;
   outline: none;
-
 }
 
 .lil-gui {
@@ -27,7 +26,8 @@ body {
 .lil-gui .children {
   background-color: #42424266;
 }
-.lil-gui.output{  background-color: #67666666;
+.lil-gui.output {
+  background-color: #67666666;
 }
 .output {
   right: unset;
@@ -74,7 +74,25 @@ body {
   color: yellow !important;
 }
 
-
 .lil-gui .controller.disabled {
   opacity: 1;
+}
+
+#warning {
+  display: none;
+}
+
+.warning {
+  display: block !important;
+  color: rgb(6, 35, 59);
+  font-size: 40px;
+  position: absolute;
+  top: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(91, 91, 129);
+  padding: 10px;
+  border-radius: 100000px;
+  border: black 10px double;
+  animation: strob 1.5s cubic-bezier(0, 5, 1, 5) infinite;
 }
