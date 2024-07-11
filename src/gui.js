@@ -12,22 +12,35 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
     .name("Propeller Diameter");
   gui.add(physicalVariables, "propellerArea", 0, 20).name("propeller Area");
   gui.add(physicalVariables, "waterDensity", 0, 20).name("Water Density");
-  gui.add(physicalVariables, "angleRudder", 0, 9).name("angle Rudder");
+  gui.add(physicalVariables, "angleRudder", -9, 9).name("angle Rudder");
 
-  const waveDirectionFolder = gui.addFolder("Wave");
-  waveDirectionFolder
-    .add(physicalVariables, "waveVelocity", 0, 30)
-    .name("Wave Velocity")
-    .listen();
-  waveDirectionFolder
-    .add(physicalVariables.waveDirection, "x", -1, 1)
-    .step(0.1)
-    .name("x");
-  waveDirectionFolder
-    .add(physicalVariables.waveDirection, "z", -1, 1)
-    .step(0.1)
-    .name("z");
-  waveDirectionFolder.close();
+  const waveDirectionFolder = gui.addFolder('Wave');
+
+    // Wave Velocity Amplitude
+    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitude', 0.001, 0.5).name('Wave Velocity Amplitude')
+    .onChange((value) => {
+        setTimeout(() => {
+            physicalVariables.waveVelocityAmplitude = value;
+            console.log("changed!----")
+        },physicalVariables.time % physicalVariables.wavePeriod); 
+    });
+
+    waveDirectionFolder.add(physicalVariables.waveDirection, 'x', -1, 1).step(0.1).name('x')
+    .onChange((value) => {
+        setTimeout(() => {
+            physicalVariables.waveDirection.x = value;
+            console.log("changed!----")
+        },physicalVariables.time % physicalVariables.wavePeriod); 
+    });
+    
+    waveDirectionFolder.add(physicalVariables.waveDirection, 'z', -1, 1).step(0.1).name('z')
+    .onChange((value) => {
+        setTimeout(() => {
+            physicalVariables.waveDirection.z = value;
+            console.log("changed!----")
+        },physicalVariables.time % physicalVariables.wavePeriod); 
+    });
+    waveDirectionFolder.close();
 
   const windPhysicsFolder = gui.addFolder("Wind");
   windPhysicsFolder

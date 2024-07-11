@@ -56,6 +56,8 @@ class PhysicsWorld {
     // this.angularVelocityY = 0;
     // this.angularVelocityZ = 0;
     this.angleY = 0;
+    this.angleX = 0;
+    this.angleZ = 0;
     this.angular_acceleration = 0;
     this.angular_velocity = 0;
 
@@ -94,10 +96,7 @@ class PhysicsWorld {
     };
 
     this.torques = {
-      //2
       H: new hYaw(this.forces.R),
-      Z: new hYaw(this.forces.Wa), //x مسببه قوة امواج منطبقة على  z عزم حول المحور
-      X: new hYaw(this.forces.Wa),
     };
 
     this.dampingFactor = 0.95;
@@ -135,17 +134,31 @@ class PhysicsWorld {
   }
 
   calculate_WindArea() {
-    const sideArea = (this.sizes.length * this.sizes.height) / 5;
-    const frontArea = (this.sizes.width * this.sizes.height) / 5;
+    // const frontArea = (this.sizes.width / 2) * this.sizes.height * (4 / 5);
+    // const sideArea = this.sizes.length * this.sizes.height * (4 / 5);
 
-    // const sideFactor = Math.abs(Math.cos(angleZ));
-    // const frontFactor = Math.abs(Math.sin(angleZ));
+    const frontArea = (this.sizes.width / 2) * this.sizes.height * (4 / 5);
+    const sideArea = this.sizes.length * this.sizes.height * (4 / 5);
 
-    return sideArea + frontArea; // just in Air
+    const windDirection = this.calculate_windVelocityDirection()
+      .clone()
+      .normalize();
+
+    const frontNormal = new Vector3(1, 0, 0);
+    const sideNormal = new Vector3(0, 0, 1);
+
+    const effectiveFrontArea =
+      frontArea * Math.abs(windDirection.dot(frontNormal));
+    const effectiveSideArea =
+      sideArea * Math.abs(windDirection.dot(sideNormal));
+
+    const totalWindArea = effectiveFrontArea + effectiveSideArea;
+
+    return totalWindArea;
   }
 
+
   calculate_velocityLength() {
-    // console.log("velocity",this.velocity);
     return this.velocity.length();
   }
 
@@ -208,18 +221,6 @@ class PhysicsWorld {
     return alpha;
   }
 
-  calculateZAlpha() {
-    const alpha = (((this.sizes.length * 1) / 2) * Math.PI) / 180;
-
-    return alpha;
-  }
-
-  calculateXAlpha() {
-    const alpha = (((this.sizes.width * 1) / 2) * Math.PI) / 180;
-
-    return alpha;
-  }
-
   calculateVAlpha() {
     const alpha = (this.physicalVariables.angleRudder * Math.PI) / 180;
     // console.log("alpha: ",alpha);
@@ -249,9 +250,10 @@ class PhysicsWorld {
     const windRelativeVelocity = windVelocityLength - velocityLength;
 
     const cm = this.constants.cm;
-    const waveVelocity = this.calculate_waveVelocityLength();
-    const waveVelocityDirection = this.calculate_waveVelocityDirection();
-    const waveRelativeVelocity = waveVelocity - velocityLength;
+    const waveVelocityDirection= this.calculate_waveVelocityDirection();
+    const time = this.physicalVariables.time;
+    const Um = this.physicalVariables.waveVelocityAmplitude;
+    const TW = this.physicalVariables.wavePeriod;
 
     const W = this.forces.W.calculate(mass, gravity);
     const T = this.forces.T.calculate(
@@ -279,14 +281,16 @@ class PhysicsWorld {
     );
     const Wa = this.forces.Wa.calculate(
       waterDensity,
-      c,
+      cd,
       RArea,
-      waveRelativeVelocity,
+      Um,
       cm,
-      100,
-      accelerationLength,
-      waveVelocityDirection
-    );
+      100, 
+      accelerationLength, 
+      waveVelocityDirection, 
+      time, 
+      TW);
+   
 
     // جمع القوى
     const sigma = new Vector3();
@@ -394,44 +398,6 @@ class PhysicsWorld {
     return d;
   }
 
-  calculateRotation(deltaTime) {
-    const waterDensity = this.calculate_waterDensity();
-    const volume = this.calculate_volume_under_water();
-
-    const c = this.constants.c;
-    const RArea = this.calculate_WaterResistanceArea();
-
-    const cm = this.constants.cm;
-    const waveVelocity = this.calculate_waveVelocityLength();
-    const velocityLength = this.calculate_velocityLength();
-    const accelerationLength = this.calculate_accelerationLength(); //2
-    const waveVelocityDirection = this.calculate_waveVelocityDirection();
-    const relativeVelocity =
-      waveVelocity !== 0 ? waveVelocity - velocityLength : 0;
-
-    //Calculate Angles From Torques
-    const zAlpha = this.calculateZAlpha();
-    const xAlpha = this.calculateXAlpha();
-
-    if (waveVelocity !== 0) {
-      const Wa = this.forces.Wa.calculate(
-        waterDensity,
-        c,
-        RArea,
-        relativeVelocity,
-        cm,
-        100,
-        accelerationLength,
-        waveVelocityDirection
-      );
-      this.angleZ = this.torques.Z.calculate(zAlpha, zAlpha * 0.9998, Wa.x);
-      this.angleX = this.torques.X.calculate(xAlpha, xAlpha * 0.9998, Wa.z);
-    } else {
-      this.angleZ = 0;
-      this.angleX = 0;
-    }
-  }
-
   calculateTorque() {
     //Calculate Angles From Torques
     const waterDensity = this.calculate_waterDensity();
@@ -514,22 +480,28 @@ class PhysicsWorld {
     this.target.rotate(x, h, v);
   }
 
-  performWaveRotations() {
-    const initialAngleZ = 0.01; //Math.min(0.01, this.angleZ);
-    const initialAngleX = 0.01; // Math.min(0.01, this.angleX);
+  perform_wave_rotations(t, Um, T) {
+    const rho = this.calculate_waterDensity();
+    const Cd = this.constants.cd;
+    const A = this.calculate_WaterResistanceArea();
+    const CM = this.constants.cm;
+    const du_dt = this.calculate_accelerationLength();
+    const waveVelocityDirection= this.calculate_waveVelocityDirection();
 
-    this.rotate(-initialAngleX, 0, initialAngleZ);
-    // this.target.addMove(0,this.angleZ*0.5,0);
+    const Wa = this.forces.Wa.calculate(rho, Cd, A, Um, CM, 100, du_dt, waveVelocityDirection, t, T);
+    
+    const u = this.forces.Wa.calculateWaveVelocity(t,Um,T);
+    console.log("u",u)
+    const angle = (u / Um) * Math.PI / 10;
+    
+    this.angleZ = angle *0.01 * waveVelocityDirection.x;
+    this.angleX = angle *0.01 * waveVelocityDirection.z;
 
-    setTimeout(() => {
-      this.rotate(initialAngleX, 0, -initialAngleZ);
-      // this.target.addMove(0,initialAngleZ*0.5,0);
-      // this.physicalVariables.waveVelocity *= this.dampingFactor;
-      this.physicalVariables.waveVelocity = 0;
-      if (this.physicalVariables.waveVelocity < 0.1) {
-        this.physicalVariables.waveVelocity = 0;
-      }
-    }, 500);
+    console.log("z",this.angleZ );
+    console.log("x",this.angleX );
+    this.rotate(this.angleX, this.angleY, this.angleZ);
+    // this.target.addMove(0,u,0);
+
   }
 
   update(deltaTime) {
@@ -542,16 +514,17 @@ class PhysicsWorld {
       warning.classList.add("warning");
     }
 
-    // this.move(d);
-
-    this.calculateRotation(deltaTime);
+    console.log("time", this.physicalVariables.time);
+    this.physicalVariables.time += deltaTime;
+    const Um = this.physicalVariables.waveVelocityAmplitude;
+    const T = this.physicalVariables.wavePeriod;
+    this.perform_wave_rotations(this.physicalVariables.time, Um, T);
+    
     const angle = this.calculate_angular(deltaTime);
     // console.log("angle ",angle);
     this.angleY += angle * 5;
     this.rotate(0, this.angleY, 0);
-    if (this.angleZ || this.angleX) {
-      this.performWaveRotations();
-    }
+  
     this.outputFolder.children.map((e) => e.updateDisplay());
   }
 }
