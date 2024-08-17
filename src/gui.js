@@ -4,7 +4,7 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const gui = new GUI();
   //const physicsFolder = gui.addFolder("Physics");
 
-  gui.add(physicalVariables, "mass", 0, 200000).name("Mass");
+  gui.add(physicalVariables, "mass", 35000, 200000).name("Mass");
   gui.add(physicalVariables, "gravity", 0, 20).name("Gravity");
   gui.add(physicalVariables, "currentRPM", 0, 1000).name("RPM");
   gui
@@ -17,13 +17,14 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const waveDirectionFolder = gui.addFolder('Wave');
 
     // Wave Velocity Amplitude
-    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 100).name('Wave Velocity Amplitude')
+    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 20).name('Wave Amplitude')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveVelocityAmplitude = value;
             console.log("changed!----")
-            
-        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
+            console.log("rest----",(physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)
+       
+        },((physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)); 
     });
 
     waveDirectionFolder.add(physicalVariables.waveDirectionTemp, 'x', -1, 1).step(0.1).name('x')
@@ -31,19 +32,19 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
         setTimeout(() => {
             physicalVariables.waveDirection.x = value;
             console.log("changed!----")
+            console.log("rest----",(physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)
             
-        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
-        // },(physicalVariables.wavePeriod * 1000 - (physicalVariables.time % (physicalVariables.wavePeriod * 1000)))); 
+        },((physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)); 
     });
     
-    waveDirectionFolder.add(physicalVariables.waveDirectionTemp, 'z', -0.1, 0.1).step(0.1).name('z')
+    waveDirectionFolder.add(physicalVariables.waveDirectionTemp, 'z', -1, 1).step(0.1).name('z')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveDirection.z = value;
             console.log("changed!----")
+            console.log("rest----",(physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)
             
-        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
-        // },(physicalVariables.wavePeriod * 1000 - (physicalVariables.time % (physicalVariables.wavePeriod * 1000)))); 
+        },((physicalVariables.wavePeriod - (physicalVariables.time % (physicalVariables.wavePeriod)))* 1000)); 
     });
     waveDirectionFolder.close();
 

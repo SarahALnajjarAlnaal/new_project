@@ -502,11 +502,6 @@ class PhysicsWorld {
 
   update(deltaTime) {
     
-    console.log("wave",this.physicalVariables.waveVelocityAmplitude)
-    console.log("time", this.physicalVariables.time);
-    console.log(this.physicalVariables.wavePeriod );
-    console.log("rest!----",this.physicalVariables.time % (this.physicalVariables.wavePeriod )*1000)
-
     //Run All Above Functions And Simulate The Physics
     const d = this.calculateMovement(deltaTime);
 
