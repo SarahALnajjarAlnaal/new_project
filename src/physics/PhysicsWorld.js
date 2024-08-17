@@ -501,25 +501,30 @@ class PhysicsWorld {
   }
 
   update(deltaTime) {
+    
     console.log("wave",this.physicalVariables.waveVelocityAmplitude)
     console.log("time", this.physicalVariables.time);
     console.log(this.physicalVariables.wavePeriod );
     console.log("rest!----",this.physicalVariables.time % (this.physicalVariables.wavePeriod )*1000)
-    // 
-    const d = this.calculateMovement(deltaTime);
-    this.move(d);
-    
-    this.physicalVariables.time += deltaTime;
 
-    this.perform_wave_rotations(this.physicalVariables.time);
+    //Run All Above Functions And Simulate The Physics
+    const d = this.calculateMovement(deltaTime);
+
+    this.physicalVariables.time += deltaTime;
+    if (this.checkBounderies()) {
+      this.move(d);
+      this.perform_wave_rotations(this.physicalVariables.time);
     
-    const angle=this.calculate_angular(deltaTime);
-    // console.log("angle ",angle);
-    this.angleY+=angle*5; 
-    this.rotate(0,this.angleY,0);
+      const angle=this.calculate_angular(deltaTime);
+      // console.log("angle ",angle);
+      this.angleY+=angle*5; 
+      this.rotate(0,this.angleY,0);
+    } else {
+      warning.classList.add("warning");
+    }
+    
     
     this.outputFolder.children.map(e => e.updateDisplay());
-
   }
 }
 
