@@ -45,7 +45,7 @@ const physicalVariables = {
   windDirection: { x: 0, y: 0, z: 0 },
 
   
-  waveDirection: { x: 1, y: 0, z: 0 },
+  waveDirection: { x: 0, y: 0, z: 0 },
   waveVelocityAmplitude: 0.1, // Um
   wavePeriod: 5, // T in seconds
   time:0,

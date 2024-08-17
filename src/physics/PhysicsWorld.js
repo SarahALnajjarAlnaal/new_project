@@ -396,7 +396,11 @@ class PhysicsWorld {
     const waterDensity = this.calculate_waterDensity();
     const c = this.constants.c;
     const RArea = this.calculate_WaterResistanceArea();
-    const velocityLength = this.calculate_velocityLength();
+     const velocityLength = this.calculate_velocityLength();
+    //  const velocityX=this.velocity.x;
+    //  const velocityZ=this.velocity.z;
+    //  const temp=(velocityX*velocityX)+(velocityZ*velocityZ);
+    //  const velocityLength = Math.sqrt(temp);
     const movement = this.movement;
     const R = this.forces.R.calculate(
       c,
@@ -418,10 +422,12 @@ class PhysicsWorld {
     //alpha = M / I
 
     const M = this.calculateTorque();
-    const I = 30000000;
+    // const I = 30000000;
+    let I = (this.calculate_mass() * this.sizes.length);
+    // let I = (this.calculate_mass() * this.sizes.length);
+    let I_x = (1/12) * this.calculate_mass() * (this.sizes.height ** 2 + this.sizes.width ** 2);
 
-    const alphaAcce = M / I; //  M / I
-
+    const alphaAcce = M / I_x; //  M / I
     this.angular_acceleration = alphaAcce;
 
     // console.log("alphaAcce",alphaAcce);
@@ -467,6 +473,23 @@ class PhysicsWorld {
 
   move(displacement) {
     this.target.addMove(displacement.x, displacement.y, displacement.z);
+    const volume=this.calculate_volume();
+      if(this.target.position?.y<=-30 && this.physicalVariables.mass>=(volume*this.physicalVariables.waterDensity)){
+        this.velocity.y = Math.max(this.velocity.y, 0);
+        this.acceleration.y = Math.max(this.acceleration.y, 0);
+        this.target.addMove(displacement.x, 0, displacement.z);
+      }
+      else if(this.target.position?.y>5){
+        this.velocity.y = Math.max(this.velocity.y, 0);
+        this.acceleration.y = Math.max(this.acceleration.y, 0);
+        this.target.addMove(displacement.x, -displacement.y, displacement.z);
+      }
+      else{
+          this.velocity.y = Math.max(this.velocity.y, 0);
+          this.acceleration.y = Math.max(this.acceleration.y, 0);
+          this.target.addMove(displacement.x, displacement.y, displacement.z);
+      }
+    // this.target.addMove(displacement.x, displacement.y, displacement.z);
   }
 
   rotate(x, h, v) {
@@ -495,7 +518,7 @@ class PhysicsWorld {
 
     // console.log("z",this.angleZ );
     // console.log("x",this.angleX );
-    this.rotate(this.angleX, this.angleY, this.angleZ);
+    this.rotate(this.angleX, 0, this.angleZ);
     // this.target.addMove(0,u,0);
 
   }
@@ -512,7 +535,7 @@ class PhysicsWorld {
     
       const angle=this.calculate_angular(deltaTime);
       // console.log("angle ",angle);
-      this.angleY+=angle*5; 
+      this.angleY+=(angle*3); 
       this.rotate(0,this.angleY,0);
     } else {
       warning.classList.add("warning");

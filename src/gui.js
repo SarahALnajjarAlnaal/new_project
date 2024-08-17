@@ -4,7 +4,7 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const gui = new GUI();
   //const physicsFolder = gui.addFolder("Physics");
 
-  gui.add(physicalVariables, "mass", 35000, 200000).name("Mass");
+  gui.add(physicalVariables, "mass", 35000, 87000000).name("Mass");
   gui.add(physicalVariables, "gravity", 0, 20).name("Gravity");
   gui.add(physicalVariables, "currentRPM", 0, 1000).name("RPM");
   gui
