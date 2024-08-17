@@ -17,28 +17,33 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const waveDirectionFolder = gui.addFolder('Wave');
 
     // Wave Velocity Amplitude
-    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitude', 0.001, 0.5).name('Wave Velocity Amplitude')
+    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 100).name('Wave Velocity Amplitude')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveVelocityAmplitude = value;
             console.log("changed!----")
-        },physicalVariables.time % physicalVariables.wavePeriod); 
+            
+        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
     });
 
-    waveDirectionFolder.add(physicalVariables.waveDirection, 'x', -1, 1).step(0.1).name('x')
+    waveDirectionFolder.add(physicalVariables.waveDirectionTemp, 'x', -1, 1).step(0.1).name('x')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveDirection.x = value;
             console.log("changed!----")
-        },physicalVariables.time % physicalVariables.wavePeriod); 
+            
+        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
+        // },(physicalVariables.wavePeriod * 1000 - (physicalVariables.time % (physicalVariables.wavePeriod * 1000)))); 
     });
     
-    waveDirectionFolder.add(physicalVariables.waveDirection, 'z', -1, 1).step(0.1).name('z')
+    waveDirectionFolder.add(physicalVariables.waveDirectionTemp, 'z', -0.1, 0.1).step(0.1).name('z')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveDirection.z = value;
             console.log("changed!----")
-        },physicalVariables.time % physicalVariables.wavePeriod); 
+            
+        },((physicalVariables.time % physicalVariables.wavePeriod ))*1000); 
+        // },(physicalVariables.wavePeriod * 1000 - (physicalVariables.time % (physicalVariables.wavePeriod * 1000)))); 
     });
     waveDirectionFolder.close();
 

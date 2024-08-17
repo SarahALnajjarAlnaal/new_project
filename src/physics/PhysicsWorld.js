@@ -120,9 +120,30 @@ class PhysicsWorld {
     return this.physicalVariables.waterDensity;
   }
 
-  calculate_volume_under_water() {
-    return this.physicalVariables.mass / this.physicalVariables.waterDensity;
+  calculate_H_underWater(){
+    const Yship=this.target.position?.y??-0.013;
+      let h=0;
+      if(Yship>=0){
+        h=0.013
+      }
+      // else if(Yship<-12){
+      //   h=this.sizes.height;
+      // }
+      else{
+        h=Yship;
+      }
+      
+      // console.log("Yship",Yship);
+      return Math.abs(h);
   }
+
+ calculate_volume_under_water() {
+    const h = this.calculate_H_underWater();
+    const w = this.sizes.width;
+    const l = this.sizes.length;
+    // console.log("-h-",h)
+    return h * w *l;
+  };
 
   calculate_volume() {
     return this.physicalVariables.volume;
@@ -236,18 +257,18 @@ class PhysicsWorld {
     const rpm = this.calculate_rpm();
     const propellerDiameter = this.calculate_diameter();
     const propellerArea = this.calculate_propellerArea();
-    const waterDensity = this.calculate_waterDensity();
-    const volume = this.calculate_volume_under_water();
-
-    const c = this.constants.c;
+    const waterDensity=this.calculate_waterDensity();
+    const volume = this.calculate_volume_under_water();//100
+    // console.log("vol",volume)
+    const c =this.constants.c;
     const RArea = this.calculate_WaterResistanceArea();
 
     const cd = this.constants.cd;
     const airDensity = this.calculate_AirDensity();
     const WArea = this.calculate_WindArea();
     const windVelocityLength = this.calculate_windVelocityLength();
-    const windVelocityDirection = this.calculate_windVelocityDirection();
-    const windRelativeVelocity = windVelocityLength - velocityLength;
+    const windVelocityDirection= this.calculate_windVelocityDirection();
+    const windRelativeVelocity = windVelocityLength-velocityLength ;
 
     const cm = this.constants.cm;
     const waveVelocityDirection= this.calculate_waveVelocityDirection();
@@ -255,43 +276,15 @@ class PhysicsWorld {
     const Um = this.physicalVariables.waveVelocityAmplitude;
     const TW = this.physicalVariables.wavePeriod;
 
-    const W = this.forces.W.calculate(mass, gravity);
-    const T = this.forces.T.calculate(
-      rpm,
-      propellerDiameter,
-      propellerArea,
-      waterDensity,
-      velocityLength,
-      this.angleY
-    );
-    const B = this.forces.B.calculate(waterDensity, volume, gravity);
-    const R = this.forces.R.calculate(
-      c,
-      RArea,
-      waterDensity,
-      velocityLength,
-      movement
-    );
-    const Wi = this.forces.Wi.calculate(
-      cd,
-      WArea,
-      airDensity,
-      windRelativeVelocity,
-      windVelocityDirection
-    );
-    const Wa = this.forces.Wa.calculate(
-      waterDensity,
-      cd,
-      RArea,
-      Um,
-      cm,
-      100, 
-      accelerationLength, 
-      waveVelocityDirection, 
-      time, 
-      TW);
-   
 
+    const W = this.forces.W.calculate(mass, gravity);
+    const T = this.forces.T.calculate(rpm, propellerDiameter, propellerArea, waterDensity,velocityLength, this.angleY);
+    const B = this.forces.B.calculate(waterDensity,volume, gravity);
+    const R = this.forces.R.calculate(c, RArea, waterDensity, velocityLength, movement);
+    const Wi =this.forces.Wi.calculate(cd, WArea, airDensity, windRelativeVelocity, windVelocityDirection);
+
+    const Wa = this.forces.Wa.calculate(waterDensity, cd, RArea, Um, cm, volume, accelerationLength, waveVelocityDirection, time, TW);
+  //  console.log("Wa",Wa)
     // جمع القوى
     const sigma = new Vector3();
     sigma.add(W);
@@ -322,7 +315,7 @@ class PhysicsWorld {
     this.output.ThrustX = T.x.toFixed(4) + " N";
     this.output.ThrustY = T.y.toFixed(4) + " N";
     this.output.ThrustZ = T.z.toFixed(4) + " N";
-
+   
     this.output.WindX = Wi.x.toFixed(4) + " N";
     this.output.WindY = Wi.y.toFixed(4) + " N";
     this.output.WindZ = Wi.z.toFixed(4) + " N";
@@ -480,7 +473,9 @@ class PhysicsWorld {
     this.target.rotate(x, h, v);
   }
 
-  perform_wave_rotations(t, Um, T) {
+  perform_wave_rotations(t) {
+    const Um = this.physicalVariables.waveVelocityAmplitude;
+    const T = this.physicalVariables.wavePeriod;
     const rho = this.calculate_waterDensity();
     const Cd = this.constants.cd;
     const A = this.calculate_WaterResistanceArea();
@@ -491,41 +486,40 @@ class PhysicsWorld {
     const Wa = this.forces.Wa.calculate(rho, Cd, A, Um, CM, 100, du_dt, waveVelocityDirection, t, T);
     
     const u = this.forces.Wa.calculateWaveVelocity(t,Um,T);
-    console.log("u",u)
+
+    // console.log("u",u)
     const angle = (u / Um) * Math.PI / 10;
     
     this.angleZ = angle *0.01 * waveVelocityDirection.x;
     this.angleX = angle *0.01 * waveVelocityDirection.z;
 
-    console.log("z",this.angleZ );
-    console.log("x",this.angleX );
+    // console.log("z",this.angleZ );
+    // console.log("x",this.angleX );
     this.rotate(this.angleX, this.angleY, this.angleZ);
     // this.target.addMove(0,u,0);
 
   }
 
   update(deltaTime) {
-    //Run All Above Functions And Simulate The Physics
-    const d = this.calculateMovement(deltaTime);
-
-    if (this.checkBounderies()) {
-      this.move(d);
-    } else {
-      warning.classList.add("warning");
-    }
-
+    console.log("wave",this.physicalVariables.waveVelocityAmplitude)
     console.log("time", this.physicalVariables.time);
-    this.physicalVariables.time += deltaTime;
-    const Um = this.physicalVariables.waveVelocityAmplitude;
-    const T = this.physicalVariables.wavePeriod;
-    this.perform_wave_rotations(this.physicalVariables.time, Um, T);
+    console.log(this.physicalVariables.wavePeriod );
+    console.log("rest!----",this.physicalVariables.time % (this.physicalVariables.wavePeriod )*1000)
+    // 
+    const d = this.calculateMovement(deltaTime);
+    this.move(d);
     
-    const angle = this.calculate_angular(deltaTime);
+    this.physicalVariables.time += deltaTime;
+
+    this.perform_wave_rotations(this.physicalVariables.time);
+    
+    const angle=this.calculate_angular(deltaTime);
     // console.log("angle ",angle);
-    this.angleY += angle * 5;
-    this.rotate(0, this.angleY, 0);
-  
-    this.outputFolder.children.map((e) => e.updateDisplay());
+    this.angleY+=angle*5; 
+    this.rotate(0,this.angleY,0);
+    
+    this.outputFolder.children.map(e => e.updateDisplay());
+
   }
 }
 
