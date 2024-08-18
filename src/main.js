@@ -52,7 +52,7 @@ const physicalVariables = {
 
   //
   waveVelocityAmplitudeTemp:0.1,
-  waveDirectionTemp: { x: 1, y: 0, z: 0 },
+  waveDirectionTemp: { x: 0, y: 0, z: 0 },
 
   checkbox:false,
   

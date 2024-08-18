@@ -30,7 +30,7 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const waveDirectionFolder = gui.addFolder('Wave');
   
     // Wave Velocity Amplitude
-    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 20).name('Wave Amplitude')
+    waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 10).name('Wave Amplitude')
     .onChange((value) => {
         setTimeout(() => {
             physicalVariables.waveVelocityAmplitude = value;

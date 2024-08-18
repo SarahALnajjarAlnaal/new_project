@@ -521,10 +521,7 @@ class PhysicsWorld {
     this.angleZ = angle *0.01 * waveVelocityDirection.x;
     this.angleX = angle *0.01 * waveVelocityDirection.z;
 
-    // console.log("z",this.angleZ );
-    // console.log("x",this.angleX );
-    this.rotate(this.angleX, 0, this.angleZ);
-    // this.target.addMove(0,u,0);
+    this.rotate(this.angleX, 0, this.angleZ * -1);
 
   }
 
