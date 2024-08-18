@@ -4,18 +4,31 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   const gui = new GUI();
   //const physicsFolder = gui.addFolder("Physics");
 
-  gui.add(physicalVariables, "mass", 35000, 87000000).name("Mass");
+  gui.add(physicalVariables, 'checkbox').name('Check').onChange((value) => {
+    // Handle checkbox change
+    // console.log(`Checkbox is now ${value ? 'checked' : 'unchecked'}`);
+    if(physicalVariables.checkbox)
+    physicalVariables.checkbox=value;
+  else
+  physicalVariables.checkbox=value;
+
+  // console.log(physicalVariables.checkbox);
+    // Add any functionality you want to trigger when the checkbox is toggled
+  });
+
+
+  gui.add(physicalVariables, "mass", 35000, 84000000).name("Mass");
   gui.add(physicalVariables, "gravity", 0, 20).name("Gravity");
-  gui.add(physicalVariables, "currentRPM", 0, 1000).name("RPM");
+  gui.add(physicalVariables, "currentRPM", 0, 30).name("RPM");
   gui
-    .add(physicalVariables, "propellerDiameter", 0, 20)
+    .add(physicalVariables, "propellerDiameter", 0, 10)
     .name("Propeller Diameter");
   gui.add(physicalVariables, "propellerArea", 0, 20).name("propeller Area");
-  gui.add(physicalVariables, "waterDensity", 0, 20).name("Water Density");
+  gui.add(physicalVariables, "waterDensity", 0, 1025).name("Water Density");
   gui.add(physicalVariables, "angleRudder", -9, 9).name("angle Rudder");
 
   const waveDirectionFolder = gui.addFolder('Wave');
-
+  
     // Wave Velocity Amplitude
     waveDirectionFolder.add(physicalVariables, 'waveVelocityAmplitudeTemp', 0.01, 20).name('Wave Amplitude')
     .onChange((value) => {
