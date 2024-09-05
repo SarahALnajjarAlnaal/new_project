@@ -10,6 +10,7 @@ import WaveForce from "./Forces/WaveForce";
 class PhysicsWorld {
   target; // ship
   controls;
+  driveOutputFolder;
 
   acceleration;
   velocity;
@@ -17,8 +18,8 @@ class PhysicsWorld {
   angleY; // for turn ship around Y
   angleX;
   angleZ;
-  constants;
-  editableConstants;
+  physicalVariables;
+  editablephysicalVariables;
   physicalVariables;
 
   angular_acceleration;
@@ -41,8 +42,9 @@ class PhysicsWorld {
     output,
     outputFolder,
     physicalVariables,
-    camera
-  ) {
+    camera,
+    driveOutputFolder
+  ){
     this.target = target;
     this.controls = controls;
     this.camera = camera;
@@ -61,13 +63,9 @@ class PhysicsWorld {
     this.angular_acceleration = 0;
     this.angular_velocity = 0;
 
-    this.constants = {
-      c: 0.1, // معامل الاحتكاك
-      cd: 0.8, // معامل السحب
-      cm: 0.9, // معامل القصور الذاتي
-    };
-
-    this.editableConstants = {
+    this.driveOutputFolder=driveOutputFolder;
+   
+    this.editablephysicalVariables = {
       //later
     };
 
@@ -260,17 +258,17 @@ class PhysicsWorld {
     const waterDensity=this.calculate_waterDensity();
     const volume = this.calculate_volume_under_water();//100
     // console.log("vol",volume);
-    const c =this.constants.c;
+    const c =this.physicalVariables.c;
     const RArea = this.calculate_WaterResistanceArea();
 
-    const cd = this.constants.cd;
+    const cd = this.physicalVariables.cd;
     const airDensity = this.calculate_AirDensity();
     const WArea = this.calculate_WindArea();
     const windVelocityLength = this.calculate_windVelocityLength();
     const windVelocityDirection= this.calculate_windVelocityDirection();
     const windRelativeVelocity = windVelocityLength-velocityLength ;
 
-    const cm = this.constants.cm;
+    const cm = this.physicalVariables.cm;
     const waveVelocityDirection= this.calculate_waveVelocityDirection();
     const time = this.physicalVariables.time;
     const Um = this.physicalVariables.waveVelocityAmplitude;
@@ -303,26 +301,34 @@ class PhysicsWorld {
     //this.output.WeightX = W.x.toFixed(4)+" N";
     this.output.WeightY = W.y.toFixed(4) + " N";
     //this.output.WeightZ = W.z.toFixed(4)+" N";
+    this.output.Weight = T.length().toFixed(4) + " N";
 
     //this.output.BuoyancyX = B.x.toFixed(4)+" N";
     this.output.BuoyancyY = B.y.toFixed(4) + " N";
     //this.output.BuoyancyZ = B.z.toFixed(4)+" N";
+    this.output.Buoyancy = B.length().toFixed(4) + " N";
 
     this.output.WaterResistanceX = R.x.toFixed(4) + " N";
     this.output.WaterResistanceY = R.y.toFixed(4) + " N";
     this.output.WaterResistanceZ = R.z.toFixed(4) + " N";
+    this.output.WaterResistance = R.length().toFixed(4) + " N";
 
     this.output.ThrustX = T.x.toFixed(4) + " N";
     this.output.ThrustY = T.y.toFixed(4) + " N";
     this.output.ThrustZ = T.z.toFixed(4) + " N";
+    this.output.Thrust = T.length().toFixed(4) + " m.s⁻²";
    
     this.output.WindX = Wi.x.toFixed(4) + " N";
     this.output.WindY = Wi.y.toFixed(4) + " N";
     this.output.WindZ = Wi.z.toFixed(4) + " N";
+    this.output.Wind = Wi.length().toFixed(4) + " N";
 
     this.output.WaveX = Wa.x.toFixed(4) + " N";
     this.output.WaveY = Wa.y.toFixed(4) + " N";
     this.output.WaveZ = Wa.z.toFixed(4) + " N";
+    this.output.Wave = Wa.length().toFixed(4) + " N";
+    this.output.sigma = sigma.length().toFixed(4) + "N";
+
     return sigma;
   }
 
@@ -387,6 +393,7 @@ class PhysicsWorld {
     this.output.PositionX = x + " m";
     this.output.PositionY = y + " m";
     this.output.PositionZ = z + " m";
+    this.output.Position = v.length().toFixed(4) + " m";
 
     return d;
   }
@@ -394,7 +401,7 @@ class PhysicsWorld {
   calculateTorque() {
     //Calculate Angles From Torques
     const waterDensity = this.calculate_waterDensity();
-    const c = this.constants.c;
+    const c = this.physicalVariables.c;
     const RArea = this.calculate_WaterResistanceArea();
      const velocityLength = this.calculate_velocityLength();
     //  const velocityX=this.velocity.x;
@@ -505,9 +512,9 @@ class PhysicsWorld {
     const Um = this.physicalVariables.waveVelocityAmplitude;
     const T = this.physicalVariables.wavePeriod;
     const rho = this.calculate_waterDensity();
-    const Cd = this.constants.cd;
+    const Cd = this.physicalVariables.cd;
     const A = this.calculate_WaterResistanceArea();
-    const CM = this.constants.cm;
+    const CM = this.physicalVariables.cm;
     const du_dt = this.calculate_accelerationLength();
     const waveVelocityDirection= this.calculate_waveVelocityDirection();
 
@@ -546,6 +553,7 @@ class PhysicsWorld {
     
     
     this.outputFolder.children.map(e => e.updateDisplay());
+    this.driveOutputFolder.children.map(e => e.updateDisplay());
   }
 }
 

@@ -9,6 +9,9 @@ import { Ship } from "./ship";
 import { GUI } from "lil-gui";
 import PhysicsWorld from "./physics/PhysicsWorld";
 import makeGui from "./gui";
+import { IslandModel } from "./environment/island";
+import { Border } from "./environment/border";
+
 let camera, renderer;
 let controls, water, sun;
 const scene = new Scene();
@@ -16,10 +19,29 @@ camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  1000
+  10000
 );
 const ship = new Ship(scene, camera);
+const island = new IslandModel(scene, camera);
 
+const positions = [
+  { x: 1000, y: -40, z: 0 },
+  { x: 100, y: -40, z: -500 },
+  { x: 700, y: -40, z: -500 },
+  { x: 1700, y: -40, z: -500 },
+  { x: 500, y: -40, z: 0 },
+  { x: 1700, y: -40, z: 0 },
+];
+
+positions.forEach((pos) => {
+  const border = new Border(scene, camera, pos);
+});
+
+// const positionIsland = [{ x: -250, y: 20, z: -500 }];
+
+// positions.forEach((pos) => {
+//   const island = new IslandModel(scene, camera, pos);
+// });
 const physicalVariables = {
   start: false,
   // showCollision: false,
@@ -49,7 +71,9 @@ const physicalVariables = {
   waveVelocityAmplitude: 0.1, // Um
   wavePeriod: 5, // T in seconds
   time:0,
-
+  c: 0.1, // معامل الاحتكاك
+  cd: 0.8, // معامل السحب
+  cm: 0.9,
   //
   waveVelocityAmplitudeTemp:0.1,
   waveDirectionTemp: { x: 0, y: 0, z: 0 },
@@ -98,16 +122,24 @@ const output = {
 
   Acceleration: 0,
   Velocity: 0,
+  Position:0,
+  Weight:0,
+  WaterResistance:0,
+  Buoyancy:0,
+  Wave:0,
+  Wind:0,
+  sigma:0,
 };
-const { outgui: outputFolder } = makeGui(output, physicalVariables);
-
+const { outgui: outputFolder, driveoutgui: driveOutputFolder } = makeGui(output, physicalVariables,);
 const physicsWorld = new PhysicsWorld(
   ship,
   {},
   output,
   outputFolder,
   physicalVariables,
-  camera
+  camera,
+  driveOutputFolder
+
 ); // تهيئة PhysicsWorld مع السفينة
 
 async function init() {

@@ -27,6 +27,10 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
   gui.add(physicalVariables, "waterDensity", 0, 1025).name("Water Density");
   gui.add(physicalVariables, "angleRudder", -9, 9).name("angle Rudder");
 
+  gui.add(physicalVariables, "c", 0.1, 1.5).name("c");
+  gui.add(physicalVariables, "cd", 0.8, 1.5).name("cd");
+  gui.add(physicalVariables, "cm", 0.9, 1.5).name("cm");
+
   const waveDirectionFolder = gui.addFolder('Wave');
   
     // Wave Velocity Amplitude
@@ -161,6 +165,24 @@ function makeGui(output, physicalVariables, paramaters, updateSunFun) {
     .disable()
     .domElement.classList.add("position");
 
-  return { outgui };
+    const driveoutgui = new GUI({ title: "driveOutput" });
+
+    driveoutgui.domElement.classList.add("driveOutput");
+    driveoutgui.add(output, "Weight").disable().domElement.classList.add("weight");
+    driveoutgui.add(output, "Buoyancy").disable().domElement.classList.add("Buoyancy")
+    driveoutgui.add(output, "WaterResistance").disable().domElement.classList.add("waterResistance");
+
+    driveoutgui.add(output, "Thrust").disable().domElement.classList.add("thrust");
+
+    driveoutgui.add(output, "Wind").disable().domElement.classList.add("wind");
+    driveoutgui.add(output, "Wave").disable().domElement.classList.add("Wave");
+
+    driveoutgui.add(output, "Acceleration").disable().domElement.classList.add("acceleration");
+    driveoutgui.add(output, "Velocity").disable().domElement.classList.add("velocity");
+    driveoutgui.add(output, "Position").disable().domElement.classList.add("position");
+    outgui.add(output, "sigma").disable().domElement.classList.add("Sigma");
+
+
+    return { outgui, driveoutgui };
 }
 export default makeGui;

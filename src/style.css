@@ -33,6 +33,13 @@ body {
   right: unset;
   left: 15px;
 }
+.lil-gui.driveOutput {
+  background-color: #67666666;
+}
+.driveOutput {
+  right: unset;
+  left: 260px;
+}
 
 .weight,
 .weight input {
@@ -61,6 +68,7 @@ body {
 
 .acceleration,
 .acceleration input {
+  
   color: aqua !important;
 }
 
@@ -73,6 +81,12 @@ body {
 .position input {
   color: yellow !important;
 }
+
+
+.cd,
+.cd input{color:red !important;}
+
+
 
 .lil-gui .controller.disabled {
   opacity: 1;
